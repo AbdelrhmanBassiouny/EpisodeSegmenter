@@ -6,7 +6,7 @@ from abc import abstractmethod, ABC
 import rospy
 from typing_extensions import Optional, List, Dict, Type
 
-from pycram.datastructures.dataclasses import ContactPointsList, Color, TextAnnotation
+from pycram.datastructures.dataclasses import ContactPointsList, Color, TextAnnotation, ObjectState
 from pycram.datastructures.world import World
 from pycram.world_concepts.world_object import Object, Link
 
@@ -40,7 +40,9 @@ class AbstractContactEvent(Event, ABC):
         super().__init__(timestamp)
         self.contact_points = contact_points
         self.of_object: Object = of_object
+        self.of_object_state: ObjectState = of_object.current_state
         self.with_object: Optional[Object] = with_object
+        self.with_object_state: Optional[ObjectState] = with_object.current_state if with_object is not None else None
         self.text_id: Optional[int] = None
 
     def __eq__(self, other):
@@ -74,7 +76,10 @@ class AbstractContactEvent(Event, ABC):
         return self.__str__()
 
     def __str__(self):
-        return f"{self.__class__.__name__}: {self.of_object.name} - {self.with_object.name if self.with_object else ''}"
+        val = f"{self.__class__.__name__}: {self.of_object.name}"
+        if self.with_object:
+            val += f" - {self.with_object.name}"
+        return val
 
     def __repr__(self):
         return self.__str__()
@@ -122,7 +127,7 @@ class ContactEvent(AbstractContactEvent):
 
     @property
     def links(self) -> List[Link]:
-        return self.contact_points.get_links_in_contact()
+        return self.contact_points.get_bodies_in_contact()
 
 
 class LossOfContactEvent(AbstractContactEvent):
@@ -144,7 +149,7 @@ class LossOfContactEvent(AbstractContactEvent):
 
     @property
     def links(self) -> List[Link]:
-        return self.contact_points.get_links_that_got_removed(self.latest_contact_points)
+        return self.contact_points.get_bodies_that_got_removed(self.latest_contact_points)
 
     @property
     def objects(self):
@@ -197,7 +202,9 @@ class PickUpEvent(Event):
                  timestamp: Optional[float] = None):
         super().__init__(timestamp)
         self.agent: Optional[Object] = agent
+        self.agent_state: Optional[ObjectState] = agent.current_state if agent is not None else None
         self.picked_object: Object = picked_object
+        self.picked_object_state: ObjectState = picked_object.current_state
         self.end_timestamp: Optional[float] = None
         self.text_id: Optional[int] = None
 

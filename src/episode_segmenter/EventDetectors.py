@@ -4,12 +4,13 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from tf.transformations import quaternion_inverse, quaternion_multiply
-from typing_extensions import Optional, List, Union
+from typing_extensions import Optional, List, Union, Type
 
 from pycram.datastructures.dataclasses import ContactPointsList
 from pycram.datastructures.enums import ObjectType
 from pycram.datastructures.pose import Transform
 from pycram.world_concepts.world_object import Object, Link
+from pycrap import PhysicalObject
 from .Events import Event, ContactEvent, LossOfContactEvent, PickUpEvent, EventLogger, AgentContactEvent, \
     AgentLossOfContactEvent, AbstractContactEvent
 
@@ -113,7 +114,7 @@ class AbstractContactDetector(PrimitiveEventDetector, ABC):
         self.latest_contact_points: Optional[ContactPointsList] = ContactPointsList([])
 
     @property
-    def obj_type(self) -> ObjectType:
+    def obj_type(self) -> Type[PhysicalObject]:
         """
         The object type of the object to track.
         """
